@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD AI Backstory Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <div class="lang-toggle-container">
+        <button type="button" id="lang-toggle" class="lang-btn">🇺🇸 EN</button>
+    </div>
+
+    <main class="container">
+        <header>
+            <h1 data-i18n="title">Forge Your Legend</h1>
+            <p data-i18n="subtitle">Enter your character details to generate an epic backstory</p>
+        </header>
+        
+        <form id="backstory-form">
+            <div class="glass-panel form-section">
+                <!-- Basic Info -->
+                <div class="input-group">
+                    <label for="name" data-i18n="charNameLabel">Character Name</label>
+                    <input type="text" id="name" placeholder="e.g. Eldor, Lirael" data-i18n-placeholder="charNamePlaceholder" required>
+                </div>
+
+                <div class="row">
+                    <div class="input-group">
+                        <label for="species" data-i18n="speciesLabel">Species/Race</label>
+                        <input type="text" id="species" placeholder="e.g. Elf, Tiefling" data-i18n-placeholder="speciesPlaceholder" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="background" data-i18n="backgroundLabel">Background</label>
+                        <input type="text" id="background" placeholder="e.g. Sage, Criminal, Noble" data-i18n-placeholder="backgroundPlaceholder" required>
+                    </div>
+                </div>
+
+                <!-- Classes section -->
+                <div class="classes-container">
+                    <h3 data-i18n="classesTitle">Classes & Levels</h3>
+                    <div id="classes-list">
+                        <!-- Dynamic rows end up here -->
+                        <div class="class-row">
+                            <input type="text" class="class-name" placeholder="Class (e.g. Fighter)" data-i18n-placeholder="classNamePlaceholder" required>
+                            <input type="text" class="class-subclass" placeholder="Subclass (Optional)" data-i18n-placeholder="classSubPlaceholder">
+                            <input type="number" class="class-level" placeholder="Lvl" data-i18n-placeholder="classLevelPlaceholder" min="1" max="20" required>
+                            <button type="button" class="remove-btn invisible" disabled>✕</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-class-btn" class="secondary-btn" data-i18n="addMulticlassBtn">+ Add Multiclass</button>
+                </div>
+
+                <!-- Advanced Details -->
+                <div class="advanced-container">
+                    <h3 data-i18n="detailsTitle">Character Details</h3>
+                    <div class="input-group">
+                        <label for="theme" data-i18n="themeLabel">Backstory Theme</label>
+                        <input type="text" id="theme" placeholder="e.g. Dark, Heroic, Tragic, Whimsical" data-i18n-placeholder="themePlaceholder" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="traits" data-i18n="traitsLabel">Personality Traits</label>
+                        <textarea id="traits" rows="2" placeholder="e.g. Brave but reckless, loyal to a fault..." data-i18n-placeholder="traitsPlaceholder" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="events" data-i18n="eventsLabel">Important Events</label>
+                        <textarea id="events" rows="2" placeholder="e.g. Betrayed by a friend, found a cursed artifact..." data-i18n-placeholder="eventsPlaceholder" required></textarea>
+                    </div>
+                </div>
+
+                <!-- NPCs section -->
+                <div class="npcs-container">
+                    <h3 data-i18n="npcsTitle">Important Characters (NPCs)</h3>
+                    <div id="npcs-list">
+                        <div class="npc-row">
+                            <input type="text" class="npc-name" placeholder="Name (e.g. Kaelen)" data-i18n-placeholder="npcNamePlaceholder">
+                            <input type="text" class="npc-role" placeholder="Role (e.g. Mentor, Rival)" data-i18n-placeholder="npcRolePlaceholder">
+                            <button type="button" class="remove-npc-btn invisible" disabled>✕</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-npc-btn" class="secondary-btn" data-i18n="addNpcBtn">+ Add NPC</button>
+                </div>
+            </div>
+
+            <button type="submit" id="generate-btn" class="primary-btn">
+                <span class="btn-text" data-i18n="generateBtn">Generate Backstory</span>
+                <span class="loader hidden"></span>
+            </button>
+        </form>
+
+        <section id="result-section" class="glass-panel hidden">
+            <div class="result-header">
+                <h2 data-i18n="resultTitle">Your Tale</h2>
+                <button type="button" id="copy-btn" class="icon-btn" title="Copy Text">📋</button>
+            </div>
+            <div id="backstory-content" class="typewriter-container"></div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
