@@ -181,6 +181,21 @@ h1, h2, h3, .heading-font {
   margin-bottom: 0;
 }
 
+/* Utilities */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hover-bright:hover {
+  filter: brightness(1.5);
+  transition: filter 0.2s ease;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

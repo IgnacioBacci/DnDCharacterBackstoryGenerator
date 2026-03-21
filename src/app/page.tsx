@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Languages, Plus, Trash2, Sparkles, Wand2, Shield, Heart, Skull, Zap } from "lucide-react";
+import { Languages, Plus, Trash2, Sparkles, Wand2, Shield, Heart, Skull, Zap, RefreshCw, ChevronDown, ChevronUp, FileText, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import en from "@/locales/en.json";
 import es from "@/locales/es.json";
@@ -12,11 +12,16 @@ type CharacterClass = {
   level: string;
 };
 
+type Trait = {
+  name: string;
+  description: string;
+};
+
 type BackstoryResult = {
   backstory: string;
-  ideals: string;
-  bonds: string;
-  flaws: string;
+  ideals: Trait[];
+  bonds: Trait[];
+  flaws: Trait[];
 };
 
 export default function Home() {
@@ -29,7 +34,6 @@ export default function Home() {
   const [background, setBackground] = useState("");
   const [pronouns, setPronouns] = useState("");
   
-  // Optional fields
   const [subclasses, setSubclasses] = useState("");
   const [tone, setTone] = useState("");
   const [characters, setCharacters] = useState("");
@@ -37,6 +41,14 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BackstoryResult | null>(null);
+  
+  // Reroll states
+  const [notRelatedMap, setNotRelatedMap] = useState<Record<string, boolean>>({});
+  const [isRerolling, setIsRerolling] = useState<string | null>(null);
+
+  // Expand state
+  const [expandText, setExpandText] = useState("");
+  const [isExpanding, setIsExpanding] = useState(false);
 
   const addClass = () => setClasses([...classes, { name: "", level: "1" }]);
   const removeClass = (index: number) => setClasses(classes.filter((_, i) => i !== index));
@@ -60,26 +72,124 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "generate-all",
           name, species, classes, background, pronouns,
           subclasses, tone, characters, lifeEvents,
           language: lang
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Generation failed");
-      }
-
       const data = await response.json();
+      if (data.error) throw new Error(data.error);
       setResult(data);
     } catch (error: any) {
-      console.error("Fetch error details:", error);
-      alert(lang === "en" ? `Error: ${error.message}` : `Error: ${error.message}`);
+      alert("Error: " + error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  const rerollTrait = async (type: "ideals" | "bonds" | "flaws", index: number) => {
+    if (!result) return;
+    const traitKey = `${type}-${index}`;
+    setIsRerolling(traitKey);
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reroll-trait",
+          backstory: result.backstory,
+          traitType: type,
+          isRelated: !notRelatedMap[traitKey],
+          currentTraits: result[type],
+          language: lang
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      
+      const newResult = { ...result };
+      newResult[type][index] = data.trait;
+      setResult(newResult);
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
+      setIsRerolling(null);
+    }
+  };
+
+  const expandBackstory = async () => {
+    if (!result || (!expandText && !window.getSelection()?.toString())) return;
+    
+    setIsExpanding(true);
+    const selectedText = window.getSelection()?.toString() || "";
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "expand-backstory",
+          currentBackstory: result.backstory,
+          extraInfo: expandText,
+          selectedText,
+          language: lang
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      
+      setResult({ ...result, backstory: data.backstory });
+      setExpandText("");
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
+      setIsExpanding(false);
+    }
+  };
+
+  const TraitCard = ({ type, title, icon: Icon, items, color }: any) => (
+    <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)', borderLeft: `3px solid ${color}` }}>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color }}>
+        <Icon size={18} /> {title}
+      </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {items.map((item: Trait, i: number) => {
+          const traitKey = `${type}-${i}`;
+          return (
+            <div key={i}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                <strong style={{ color: 'white', fontWeight: 700 }}>{item.name}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: '#94a3b8', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!notRelatedMap[traitKey]} 
+                      onChange={() => setNotRelatedMap({ ...notRelatedMap, [traitKey]: !notRelatedMap[traitKey] })}
+                    />
+                    {lang === "en" ? "Not related" : "No relacionado"}
+                  </label>
+                  <button 
+                    disabled={isRerolling === traitKey}
+                    onClick={() => rerollTrait(type, i)}
+                    style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    className="hover-bright"
+                  >
+                    <RefreshCw size={14} className={isRerolling === traitKey ? "spin" : ""} />
+                  </button>
+                </div>
+              </div>
+              <p style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{item.description}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <main className="container">
@@ -99,24 +209,15 @@ export default function Home() {
       </header>
 
       <div className="glass-card">
+        {/* Form Fields - Reused from before */}
         <div className="grid-2">
           <div className="input-group">
             <label className="input-label">{t.name} *</label>
-            <input 
-              className="input-field" 
-              placeholder={t.placeholders.name} 
-              value={name} 
-              onChange={e => setName(e.target.value)}
-            />
+            <input className="input-field" placeholder={t.placeholders.name} value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="input-group">
             <label className="input-label">{t.species} *</label>
-            <input 
-              className="input-field" 
-              placeholder={t.placeholders.species} 
-              value={species} 
-              onChange={e => setSpecies(e.target.value)}
-            />
+            <input className="input-field" placeholder={t.placeholders.species} value={species} onChange={e => setSpecies(e.target.value)} />
           </div>
         </div>
 
@@ -127,22 +228,11 @@ export default function Home() {
               <div key={i} className="multiclass-item" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <label className="input-label">{t.class} {i + 1}</label>
-                  <input 
-                    className="input-field" 
-                    placeholder={t.placeholders.class} 
-                    value={c.name} 
-                    onChange={e => updateClass(i, "name", e.target.value)}
-                  />
+                  <input className="input-field" placeholder={t.placeholders.class} value={c.name} onChange={e => updateClass(i, "name", e.target.value)} />
                 </div>
                 <div style={{ width: '100px' }}>
                   <label className="input-label">{t.level}</label>
-                  <input 
-                    type="number" 
-                    className="input-field" 
-                    min="1" max="20" 
-                    value={c.level} 
-                    onChange={e => updateClass(i, "level", e.target.value)}
-                  />
+                  <input type="number" className="input-field" min="1" max="20" value={c.level} onChange={e => updateClass(i, "level", e.target.value)} />
                 </div>
                 {classes.length > 1 && (
                   <button className="btn btn-secondary" onClick={() => removeClass(i)} style={{ color: '#ef4444' }}>
@@ -151,144 +241,96 @@ export default function Home() {
                 )}
               </div>
             ))}
-            <button className="btn btn-secondary" onClick={addClass} style={{ alignSelf: 'flex-start' }}>
-              <Plus size={18} /> {t.addClass}
-            </button>
+            <button className="btn btn-secondary" onClick={addClass} style={{ alignSelf: 'flex-start' }}><Plus size={18} /> {t.addClass}</button>
           </div>
         </div>
 
         <div className="grid-2">
           <div className="input-group">
             <label className="input-label">{t.background} *</label>
-            <input 
-              className="input-field" 
-              placeholder={t.placeholders.background} 
-              value={background} 
-              onChange={e => setBackground(e.target.value)}
-            />
+            <input className="input-field" placeholder={t.placeholders.background} value={background} onChange={e => setBackground(e.target.value)} />
           </div>
           <div className="input-group">
             <label className="input-label">{t.pronouns} *</label>
-            <input 
-              className="input-field" 
-              placeholder={t.placeholders.pronouns} 
-              value={pronouns} 
-              onChange={e => setPronouns(e.target.value)}
-            />
+            <input className="input-field" placeholder={t.placeholders.pronouns} value={pronouns} onChange={e => setPronouns(e.target.value)} />
           </div>
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid var(--card-border)', margin: '2rem 0' }} />
-        
         <h3 style={{ marginBottom: '1.5rem', color: '#cbd5e1' }}>Optional Details</h3>
         
         <div className="grid-2">
           <div className="input-group">
             <label className="input-label">{t.subclass}</label>
-            <input 
-              className="input-field" 
-              placeholder={t.placeholders.subclass} 
-              value={subclasses} 
-              onChange={e => setSubclasses(e.target.value)}
-            />
+            <input className="input-field" placeholder={t.placeholders.subclass} value={subclasses} onChange={e => setSubclasses(e.target.value)} />
           </div>
           <div className="input-group">
             <label className="input-label">{t.tone}</label>
-            <input 
-              className="input-field" 
-              placeholder={t.placeholders.tone} 
-              value={tone} 
-              onChange={e => setTone(e.target.value)}
-            />
+            <input className="input-field" placeholder={t.placeholders.tone} value={tone} onChange={e => setTone(e.target.value)} />
           </div>
         </div>
 
         <div className="input-group">
           <label className="input-label">{t.importantCharacters}</label>
-          <textarea 
-            className="input-field" 
-            style={{ height: '80px', resize: 'none' }}
-            placeholder={t.placeholders.importantCharacters + " (" + t.relationships + ")"} 
-            value={characters} 
-            onChange={e => setCharacters(e.target.value)}
-          />
+          <textarea className="input-field" style={{ height: '80px', resize: 'none' }} placeholder={t.placeholders.importantCharacters} value={characters} onChange={e => setCharacters(e.target.value)} />
         </div>
 
         <div className="input-group">
           <label className="input-label">{t.lifeEvents}</label>
-          <textarea 
-            className="input-field" 
-            style={{ height: '80px', resize: 'none' }}
-            placeholder={t.placeholders.lifeEvents} 
-            value={lifeEvents} 
-            onChange={e => setLifeEvents(e.target.value)}
-          />
+          <textarea className="input-field" style={{ height: '80px', resize: 'none' }} placeholder={t.placeholders.lifeEvents} value={lifeEvents} onChange={e => setLifeEvents(e.target.value)} />
         </div>
 
-        <button 
-          className="btn btn-primary" 
-          style={{ width: '100%', marginTop: '1rem', height: '3.5rem', fontSize: '1.1rem' }}
-          disabled={loading}
-          onClick={generateBackstory}
-        >
-          {loading ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              >
-                <Sparkles size={20} />
-              </motion.div>
-              {t.generating}
-            </>
-          ) : (
-            <><Wand2 size={20} /> {t.generate}</>
-          )}
+        <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', height: '3.5rem' }} disabled={loading} onClick={generateBackstory}>
+          {loading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><RefreshCw size={20} /></motion.div> : <><Wand2 size={20} /> {t.generate}</>}
         </button>
       </div>
 
       <AnimatePresence>
         {result && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="result-section"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="result-section">
             <div className="glass-card" style={{ borderLeft: '4px solid var(--accent-1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <Sparkles className="gradient-text" />
-                <h2 className="heading-font">{t.backstory}</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <FileText className="gradient-text" />
+                  <h2 className="heading-font">{t.backstory}</h2>
+                </div>
               </div>
-              <div style={{ fontSize: '1.1rem', color: '#e2e8f0', lineHeight: '1.8' }}>
+              
+              <div style={{ fontSize: '1.1rem', color: '#e2e8f0', lineHeight: '1.8' }} className="markdown-content">
                 <ReactMarkdown>{result.backstory}</ReactMarkdown>
               </div>
 
-              <div className="grid-2" style={{ marginTop: '3rem' }}>
-                <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#fbbf24' }}>
-                    <Zap size={18} /> {t.ideals}
-                  </h3>
-                  <div style={{ color: '#cbd5e1' }} className="markdown-content">
-                    <ReactMarkdown>{result.ideals}</ReactMarkdown>
-                  </div>
-                </div>
-                <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)' }}>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#10b981' }}>
-                    <Heart size={18} /> {t.bonds}
-                  </h3>
-                  <div style={{ color: '#cbd5e1' }} className="markdown-content">
-                    <ReactMarkdown>{result.bonds}</ReactMarkdown>
-                  </div>
+              {/* Expansion Tool */}
+              <div className="glass-card" style={{ marginTop: '2.5rem', background: 'rgba(255,255,255,0.02)', padding: '1.5rem' }}>
+                <h4 style={{ marginBottom: '1rem', color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Sparkles size={16} /> 
+                  {lang === "en" ? "Expand backstory with new details (or select part of text above to focus)" : "Expandir historia con nuevos detalles (o selecciona un fragmento arriba)"}
+                </h4>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <textarea 
+                    className="input-field" 
+                    style={{ flex: 1, height: '60px', minHeight: '60px' }}
+                    placeholder={lang === "en" ? "e.g. Add a detailed description of the childhood friend's betrayal..." : "ej. Añade una descripción detallada de la traición del amigo de la infancia..."}
+                    value={expandText}
+                    onChange={e => setExpandText(e.target.value)}
+                  />
+                  <button 
+                    disabled={isExpanding || (!expandText && !window.getSelection()?.toString())}
+                    onClick={expandBackstory}
+                    className="btn btn-primary"
+                    style={{ height: '60px', width: '60px', padding: 0 }}
+                  >
+                    {isExpanding ? <RefreshCw className="spin" /> : <Send size={20} />}
+                  </button>
                 </div>
               </div>
-              <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)', marginTop: '1.5rem' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#ef4444' }}>
-                  <Skull size={18} /> {t.flaws}
-                </h3>
-                <div style={{ color: '#cbd5e1' }} className="markdown-content">
-                  <ReactMarkdown>{result.flaws}</ReactMarkdown>
-                </div>
+
+              <div className="grid-2" style={{ marginTop: '3rem' }}>
+                <TraitCard type="ideals" title={t.ideals} icon={Zap} items={result.ideals} color="#fbbf24" />
+                <TraitCard type="bonds" title={t.bonds} icon={Heart} items={result.bonds} color="#10b981" />
+              </div>
+              <div style={{ marginTop: '1.5rem' }}>
+                <TraitCard type="flaws" title={t.flaws} icon={Skull} items={result.flaws} color="#ef4444" />
               </div>
             </div>
           </motion.div>
@@ -296,7 +338,7 @@ export default function Home() {
       </AnimatePresence>
 
       <footer style={{ marginTop: '4rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem', paddingBottom: '2rem' }}>
-        &copy; 2026 D&D Character Backstory Generator. Powered by AI.
+        &copy; 2026 D&D Character Backstory Generator.
       </footer>
     </main>
   );
