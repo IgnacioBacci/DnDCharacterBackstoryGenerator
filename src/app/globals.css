@@ -159,6 +159,28 @@ h1, h2, h3, .heading-font {
   margin-bottom: 1rem;
 }
 
+/* Markdown Styles */
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content strong {
+  color: white;
+  font-weight: 700;
+}
+
+.result-section p {
+  margin-bottom: 1.25rem;
+}
+
+.result-section p:last-child {
+  margin-bottom: 0;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

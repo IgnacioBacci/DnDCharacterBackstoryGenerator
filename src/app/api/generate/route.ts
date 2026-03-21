@@ -24,12 +24,22 @@ export async function POST(req: NextRequest) {
     
     CRITICAL RULES:
     1. NEVER mention character levels, specific class names (e.g., "Paladin", "Wizard"), or subclass names (e.g., "Oath of Vengeance") directly.
-    2. DESCRIBE their abilities and powers through flavor text. For example, instead of "is a barbarian", say "is driven by a primal fury that manifests as unyielding strength in battle". Instead of "casts firebolt", say "manipulates the weave to conjure sparks and flame from thin air".
-    3. The scale of the backstory MUST match the power tier: ${powerTier}. A level 1-4 character shouldn't have slain a dragon, but a level 17+ character might have saved planes of existence.
-    4. Incorporate the subclass flavor effectively. For example, an Echo Knight should have mentions of temporal fragments or shadows of themselves.
+    2. DESCRIBE their abilities and powers through flavor text.
+    3. The scale of the backstory MUST match the power tier: ${powerTier}.
+    4. Incorporate the subclass flavor effectively.
     5. The tone should be: ${tone || "balanced"}.
     6. Language: ${language === "es" ? "Spanish" : "English"}.
-    
+
+    BACKSTORY REQUIREMENTS:
+    - Personal and interesting: Focus on the character's internal struggles and specific events.
+    - Explicit: Detail exactly what happened and how they were involved.
+    - MOTIVE: The backstory MUST conclude with a clear and compelling reason why the character is starting their adventure NOW.
+
+    TRAITS (Ideals, Bonds, Flaws):
+    - You MUST provide AT LEAST 3 of each.
+    - FORMAT: Each trait must start with a bolded name/word (e.g., **Arrogance** or **Arrogancia**) followed by a single paragraph explaining how it specifically manifests in this character.
+    - Use newlines between each trait.
+
     Output Format (JSON):
     {
       "backstory": "...",

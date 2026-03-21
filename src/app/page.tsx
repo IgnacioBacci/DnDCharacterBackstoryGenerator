@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Languages, Plus, Trash2, Sparkles, Wand2, Shield, Heart, Skull, Zap } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import en from "@/locales/en.json";
 import es from "@/locales/es.json";
 
@@ -259,29 +260,35 @@ export default function Home() {
                 <Sparkles className="gradient-text" />
                 <h2 className="heading-font">{t.backstory}</h2>
               </div>
-              <p style={{ fontSize: '1.1rem', whiteSpace: 'pre-wrap', color: '#e2e8f0', lineHeight: '1.8' }}>
-                {result.backstory}
-              </p>
+              <div style={{ fontSize: '1.1rem', color: '#e2e8f0', lineHeight: '1.8' }}>
+                <ReactMarkdown>{result.backstory}</ReactMarkdown>
+              </div>
 
               <div className="grid-2" style={{ marginTop: '3rem' }}>
                 <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)' }}>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#fbbf24' }}>
                     <Zap size={18} /> {t.ideals}
                   </h3>
-                  <p style={{ color: '#cbd5e1' }}>{result.ideals}</p>
+                  <div style={{ color: '#cbd5e1' }} className="markdown-content">
+                    <ReactMarkdown>{result.ideals}</ReactMarkdown>
+                  </div>
                 </div>
                 <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)' }}>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#10b981' }}>
                     <Heart size={18} /> {t.bonds}
                   </h3>
-                  <p style={{ color: '#cbd5e1' }}>{result.bonds}</p>
+                  <div style={{ color: '#cbd5e1' }} className="markdown-content">
+                    <ReactMarkdown>{result.bonds}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
               <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)', marginTop: '1.5rem' }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#ef4444' }}>
                   <Skull size={18} /> {t.flaws}
                 </h3>
-                <p style={{ color: '#cbd5e1' }}>{result.flaws}</p>
+                <div style={{ color: '#cbd5e1' }} className="markdown-content">
+                  <ReactMarkdown>{result.flaws}</ReactMarkdown>
+                </div>
               </div>
             </div>
           </motion.div>
