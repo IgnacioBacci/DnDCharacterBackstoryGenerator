@@ -13,7 +13,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// In Vercel, static files are served from the root by the platform.
+// This is kept here for local development compatibility.
+app.use(express.static(path.join(__dirname, '../')));
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
@@ -23,7 +26,6 @@ app.post('/api/generate-backstory', async (req, res) => {
     try {
         const { name, species, background, theme, traits, events, classes, npcs, language } = req.body;
         
-        // Format classes without mentioning levels to the AI to enforce organic writing
         let classStr = classes.map(c => {
             let str = c.name;
             if (c.subclass) str += ` (Subclass: ${c.subclass})`;

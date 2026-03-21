@@ -2,7 +2,7 @@
   "name": "dnd-backstory-generator",
   "version": "1.0.0",
   "description": "DnD Backstory Generator using Groq AI",
-  "main": "server.js",
+  "main": "api/index.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
