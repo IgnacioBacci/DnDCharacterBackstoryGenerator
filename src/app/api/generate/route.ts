@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ],
-      model: "llama3-8b-8192", // Using 8b for faster response times to avoid timeouts
+      model: "llama-3.3-70b-versatile", // Updated to a non-decommissioned model
       response_format: { type: "json_object" }
     });
 
