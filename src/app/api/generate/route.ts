@@ -50,20 +50,32 @@ export async function POST(req: NextRequest) {
       Important Life Events: ${lifeEvents || "Not specified"}
     `;
 
+    console.log("API: Starting Groq completion...");
+    
+    if (!process.env.GROQ_API_KEY) {
+      console.error("API Error: GROQ_API_KEY is missing");
+      return NextResponse.json({ error: "Server Configuration Error: API key missing. Please check Vercel environment variables." }, { status: 500 });
+    }
+
     const completion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ],
-      model: "llama3-70b-8192",
+      model: "llama3-8b-8192", // Using 8b for faster response times to avoid timeouts
       response_format: { type: "json_object" }
     });
 
+    console.log("API: Groq response received");
     const response = JSON.parse(completion.choices[0].message.content || "{}");
 
     return NextResponse.json(response);
-  } catch (error) {
-    console.error("Error generating backstory:", error);
-    return NextResponse.json({ error: "Failed to generate backstory" }, { status: 500 });
+  } catch (error: any) {
+    console.error("API Error details:", error);
+    // Return the specific error message from the SDK or network
+    return NextResponse.json({ 
+      error: `AI Generation Error: ${error.message || "Unknown error"}`,
+      details: error.stack
+    }, { status: 500 });
   }
 }
