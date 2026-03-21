@@ -65,10 +65,16 @@ export default function Home() {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Generation failed");
+      }
+
       const data = await response.json();
       setResult(data);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("Fetch error details:", error);
+      alert(lang === "en" ? `Error: ${error.message}` : `Error: ${error.message}`);
     } finally {
       setLoading(false);
     }

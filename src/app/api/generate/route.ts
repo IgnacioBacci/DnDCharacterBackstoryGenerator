@@ -2,8 +2,11 @@ import { groq } from "@/lib/groq";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+  console.log("API: /api/generate hit");
   try {
     const body = await req.json();
+    console.log("API: Request body received", body);
+    
     const { 
       name, species, classes, background, pronouns, 
       subclasses, tone, characters, lifeEvents, language 
