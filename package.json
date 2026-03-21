@@ -1,15 +1,27 @@
 {
-  "name": "dnd-backstory-generator",
-  "version": "1.0.0",
-  "description": "DnD Backstory Generator using Groq AI",
-  "type": "module",
+  "name": "back-gen",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node api/index.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "groq-sdk": "^1.1.1"
+    "framer-motion": "^12.38.0",
+    "groq-sdk": "^1.1.1",
+    "lucide-react": "^0.577.0",
+    "next": "16.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "typescript": "^5"
   }
 }
