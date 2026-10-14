@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
     const completion = await groq.chat.completions.create({
       messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       response_format: { type: "json_object" }
     });
 
